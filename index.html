@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Nachbargarten – ein ruhiges Garten-Rätselspiel: Jede Pflanze beeinflusst ihre Nachbarn.">
+<meta name="theme-color" content="#bfe6f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14233a" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Garten">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>Nachbargarten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: ruhig, freundlich, ein Garten am frühen Morgen
+   IDEA: ein Hochbeet aus Holz, in das man Setzlinge steckt
+   PICTURE: das Beet mit gezeichneten Pflanzen, darüber Himmel und Hügel
+   COLOUR and TYPE: Wiesengrün, Erdbraun und Holz, Sonnengelb als Akzent; Nunito
+   LAYOUT: Himmel mit Titel, Beet, Saatkiste, Werkzeuge, Regeln, dein Garten */
+:root{color-scheme:light dark;
+--sky1:light-dark(#bfe6f2,#14233a);--sky2:light-dark(#f8efc4,#2b3a4f);
+--bg:light-dark(#cfe3ad,#18281b);--bg2:light-dark(#bcd795,#223627);
+--ink:light-dark(#2a3820,#e8f0dc);--soft:light-dark(#566849,#a9bb9b);
+--wood:light-dark(#b9834f,#7a5534);--wood2:light-dark(#8f5f34,#55391f);
+--soil:light-dark(#9a6745,#5f3f2a);--soilD:light-dark(#6f4630,#3f2a1c);
+--card:light-dark(#f6f9ec,#26382a);--sun:#f4b731;--bad:#d0583b;--good:#3f9a4b}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Nunito,system-ui,sans-serif;overflow-x:clip;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit}
+.sky{background:linear-gradient(var(--sky1),var(--sky2));position:relative;overflow:hidden}
+.sky .in{max-width:560px;margin:0 auto;padding:20px 16px 46px;position:relative;z-index:1;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.sky svg.hills{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:70px}
+.sun{position:absolute;right:8%;top:14px;width:64px;height:64px;border-radius:50%;background:radial-gradient(circle,#ffe17a 0 45%,#f4b731 46% 60%,transparent 62%);box-shadow:0 0 60px 20px rgba(255,214,90,.45)}
+:root[data-theme=dark] .sun,@media(prefers-color-scheme:dark){}
+h1{font-size:36px;line-height:1.05;margin:0;font-weight:900;letter-spacing:-.5px}
+.sub{color:var(--soft);font-weight:700;margin-top:4px}
+.sub b{color:var(--ink)}
+.iconbtn{width:44px;height:44px;border-radius:14px;border:0;background:rgba(255,255,255,.55);color:#2a3820;font-weight:900;cursor:pointer;flex:none;position:relative;z-index:2}
+main{max-width:560px;margin:0 auto;padding:4px max(16px,env(safe-area-inset-right)) calc(48px + env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+.intro{display:flex;gap:12px;align-items:center;background:light-dark(#fff3cf,#3b4628);border-radius:18px;padding:10px 12px;margin:0 0 14px;animation:pop .4s ease}
+.intro svg{width:52px;height:52px;flex:none}
+.intro b{display:block}
+.frame{background:linear-gradient(90deg,var(--wood2),var(--wood) 30%,var(--wood) 70%,var(--wood2));padding:12px;border-radius:20px;box-shadow:0 8px 0 light-dark(#6d4626,#3a2615),0 16px 28px rgba(0,0,0,.22);margin-bottom:24px;position:relative}
+.frame::before{content:"";position:absolute;inset:5px;border-radius:16px;border:2px dashed rgba(0,0,0,.12);pointer-events:none}
+.bed{display:grid;gap:7px;background:var(--soilD);border-radius:12px;padding:7px}
+.cell{aspect-ratio:1;border-radius:12px;border:0;padding:0;position:relative;cursor:pointer;background:radial-gradient(circle at 30% 30%,rgba(255,255,255,.10) 0 2px,transparent 3px) 0 0/14px 14px,var(--soil);box-shadow:inset 0 -4px 0 rgba(0,0,0,.18);transition:background-color .25s}
+.cell.shade{background-color:light-dark(#79503a,#4a3122)}
+.cell.shade::after{content:"";position:absolute;inset:0;border-radius:12px;background:repeating-linear-gradient(135deg,rgba(20,10,0,.16) 0 5px,transparent 5px 11px);pointer-events:none}
+.cell.stone,.cell.pond,.cell.fixed{cursor:default}
+.cell:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.cell.hint{animation:ring 1s ease-in-out 3}
+@keyframes ring{50%{box-shadow:0 0 0 4px var(--sun),inset 0 -4px 0 rgba(0,0,0,.18)}}
+.cell svg{position:absolute;inset:5%;width:90%;height:90%}
+.cell .new{animation:pop .35s cubic-bezier(.3,1.6,.6,1)}
+@keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+.mood{position:absolute;right:4px;top:4px;width:16px;height:16px;border-radius:50%;border:2px solid #fff;z-index:2;display:grid;place-items:center}
+.mood.ok{background:var(--good)}.mood.no{background:var(--bad)}
+.pin{position:absolute;left:5px;bottom:5px;width:10px;height:10px;border-radius:3px;background:light-dark(#f6e2b8,#d9c29a);box-shadow:0 1px 0 rgba(0,0,0,.3);z-index:2}
+.plant.ok{transform-origin:50% 92%;animation:sway 3.4s ease-in-out infinite}
+.plant.no{filter:saturate(.3) brightness(.92);transform:rotate(-9deg);transform-origin:50% 92%}
+@keyframes sway{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+.box{background:var(--card);border-radius:18px;padding:10px;box-shadow:0 4px 0 rgba(0,0,0,.07)}
+.seeds{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:8px}
+.seed{display:flex;align-items:center;gap:6px;min-height:58px;padding:6px 8px;border-radius:14px;border:2px solid transparent;background:var(--bg2);color:var(--ink);font-weight:900;font-size:16px;cursor:pointer;text-align:left}
+.seed svg{width:40px;height:40px;flex:none}
+.seed.sel{border-color:var(--sun);background:light-dark(#fff3cf,#3d4a2b)}
+.seed:disabled{opacity:.38;cursor:default}
+.seed small{font-weight:700;color:var(--soft);display:block;font-size:13px;line-height:1.1}
+.msg{min-height:26px;margin:12px 2px;font-weight:800;color:var(--soft)}
+.tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px}
+.btn{min-height:46px;padding:0 12px;border-radius:14px;border:0;font-weight:900;font-size:15px;cursor:pointer;background:var(--bg2);color:var(--ink)}
+.btn.main{background:var(--sun);color:#3a2a00}
+.btn:disabled{opacity:.4;cursor:default}
+.btn:focus-visible,.seed:focus-visible,.iconbtn:focus-visible,.lv:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+h2{font-size:23px;margin:28px 0 10px;font-weight:900;line-height:1.1}
+.rules{display:grid;gap:10px}
+.rule{display:flex;gap:10px;align-items:center}
+.rule svg{width:42px;height:42px;flex:none}
+.lawn{background:radial-gradient(circle at 20% 20%,rgba(255,255,255,.18) 0 1px,transparent 2px) 0 0/18px 18px,light-dark(#8fc06a,#2f5232);border-radius:22px;padding:14px;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:14px}
+.mini{background:var(--wood);border-radius:10px;padding:4px;box-shadow:0 4px 0 light-dark(#6d4626,#3a2615)}
+.mini .g{display:grid;gap:2px;background:var(--soilD);border-radius:6px;padding:2px}
+.mini .g div{aspect-ratio:1;border-radius:3px;background:var(--soil);position:relative}
+.mini svg{position:absolute;inset:0;width:100%;height:100%}
+.mini.todo{background:transparent;box-shadow:none;border:2px dashed rgba(255,255,255,.5);display:grid;place-items:center;aspect-ratio:1;color:rgba(255,255,255,.85);font-weight:900}
+.count{color:var(--soft);font-weight:800;margin:-4px 0 10px}
+/* Overlays */
+.ov{position:fixed;inset:0;background:rgba(20,30,15,.55);display:grid;place-items:center;padding:16px;z-index:20}
+.ov[hidden]{display:none}
+.sheet{background:var(--card);border-radius:24px;padding:18px;width:min(520px,100%);max-height:86vh;overflow:auto;box-shadow:0 20px 50px rgba(0,0,0,.35)}
+.sheet h3{margin:0 0 6px;font-size:24px;font-weight:900}
+.chap{margin:14px 0 6px;font-weight:900}
+.chap span{color:var(--soft);font-weight:700}
+.lvls{display:flex;gap:8px;flex-wrap:wrap}
+.lv{width:46px;height:46px;border-radius:14px;border:2px solid var(--wood);background:transparent;color:var(--ink);font-weight:900;font-size:16px;cursor:pointer}
+.lv.done{background:var(--good);border-color:var(--good);color:#fff}
+.lv.cur{outline:3px solid var(--sun);outline-offset:2px}
+.lv:disabled{opacity:.35;cursor:default}
+.win{text-align:center}
+.win svg{width:120px;height:120px}
+.petal{position:fixed;top:-20px;width:14px;height:10px;border-radius:60% 0;z-index:21;pointer-events:none;animation:fall linear forwards}
+@keyframes fall{to{transform:translate(var(--dx),110vh) rotate(720deg)}}
+@media (prefers-reduced-motion:reduce){.plant.ok,.cell .new,.intro{animation:none}.petal{display:none}}
+.note{font-size:13px;color:var(--soft);margin-top:26px}
+</style>
+</head>
+<body>
+<div class="sky">
+ <div class="sun"></div>
+ <div class="in">
+  <div><h1>Nachbargarten</h1><div class="sub" id="sub"></div></div>
+  <div style="display:flex;gap:8px"><button class="iconbtn" id="snd" aria-label="Ton an oder aus">♪</button><button class="iconbtn" id="map" aria-label="Beete auswählen">▦</button></div>
+ </div>
+ <svg class="hills" viewBox="0 0 400 70" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40 Q60 10 130 34 T260 30 T400 26 V70 H0Z" fill="light-dark(#a9cf82,#24392a)" style="fill:var(--bg2)"/><path d="M0 56 Q90 34 190 52 T400 46 V70 H0Z" style="fill:var(--bg)"/></svg>
+</div>
+<main>
+ <div id="intro"></div>
+ <div class="frame"><div class="bed" id="bed"></div></div>
+ <div class="box"><div class="seeds" id="seeds"></div></div>
+ <div class="msg" id="msg" aria-live="polite"></div>
+ <div class="tools">
+  <button class="btn" id="undo">Zurück</button>
+  <button class="btn" id="hint">Tipp</button>
+  <button class="btn" id="reset">Neu</button>
+ </div>
+ <h2>Wer mag was?</h2>
+ <div class="box rules" id="rules"></div>
+ <h2>Dein Garten</h2>
+ <div class="count" id="count"></div>
+ <div class="lawn" id="garden"></div>
+ <p class="note">30 Beete in 6 Kapiteln, jedes auf Lösbarkeit geprüft. Pflanzen mit hellem Pflock stehen fest. Dein Fortschritt wird auf diesem Gerät gespeichert, und das Spiel läuft auch offline.</p>
+</main>
+
+<div class="ov" id="mapOv" hidden><div class="sheet" role="dialog" aria-label="Beete">
+ <h3>Beete</h3><div id="mapList"></div>
+ <div style="margin-top:16px"><button class="btn" id="mapClose" style="width:100%">Schließen</button></div>
+</div></div>
+<div class="ov" id="winOv" hidden><div class="sheet win" role="dialog" aria-label="Beet fertig">
+ <div id="winArt"></div><h3>Beet fertig!</h3><p id="winTxt" style="margin:4px 0 16px;color:var(--soft);font-weight:700"></p>
+ <button class="btn main" id="winNext" style="width:100%">Weiter</button>
+</div></div>
+
+<script>
+{
+const LEVELS=[{"ch":1,"map":["...","..."],"inv":{"F":3,"S":3},"sol":["FSF","SFS"],"n":2},{"ch":1,"map":["...","...","..."],"inv":{"S":5,"F":4},"sol":["SFS","FSF","SFS"],"n":1},{"ch":1,"map":["...","...","..#"],"inv":{"S":4,"F":4},"sol":["SFS","FSF","SF#"],"n":2},{"ch":1,"map":["....","....","...."],"inv":{"S":6,"F":6},"sol":["SFSF","FSFS","SFSF"],"n":2},{"ch":1,"map":["....","..#.","...."],"inv":{"S":6,"F":5},"sol":["SFSF","FS#S","SFSF"],"n":1},{"ch":2,"map":["...","...","..."],"inv":{"F":5,"S":3,"T":1},"sol":["FSF","SFS","FTF"],"n":4},{"ch":2,"map":["....","....","...."],"inv":{"S":1,"F":2,"T":9},"sol":["SFTT","FTTT","TTTT"],"n":4},{"ch":2,"map":["..#.","....","#..."],"inv":{"T":2,"F":6,"S":2},"sol":["TF#T","FSFF","#FFS"],"n":2},{"ch":2,"map":[".T#T","....","....","..#."],"inv":{"F":7,"S":5},"sol":["FT#T","SFSF","FSFF","SF#S"],"n":2},{"ch":2,"map":["....","...S","T...",".#.."],"inv":{"S":4,"F":8,"T":1},"sol":["SFSF","FSFS","TFFF","T#SF"],"n":1},{"ch":3,"map":["....","..L.","..F."],"inv":{"T":5,"L":3,"S":2},"sol":["TTTT","LTLL","SLFS"],"n":3},{"ch":3,"map":["#...","....","..F."],"inv":{"T":4,"L":3,"S":3},"sol":["#TTT","SLTL","LSFS"],"n":6},{"ch":3,"map":["....",".#.#",".F..","F.T."],"inv":{"S":3,"L":4,"F":1,"T":3},"sol":["SLSF","L#L#","SFTL","FTTT"],"n":5},{"ch":3,"map":["..#T","..#.","...S","F.#."],"inv":{"T":5,"L":2,"F":2,"S":1},"sol":["TT#T","TT#L","TLFS","FS#F"],"n":1},{"ch":3,"map":["..S.",".S.F","....","#..L"],"inv":{"S":2,"F":6,"T":3},"sol":["SFSF","FSFF","TFFS","#TTL"],"n":2},{"ch":4,"map":["M...","....","#..."],"inv":{"S":1,"F":2,"T":5},"sol":["M.SF",".TFT","#TTT"],"n":5},{"ch":4,"map":["....","FF#.","....","T..#"],"inv":{"S":3,"F":3,"T":2,"M":1},"sol":["SFSF","FF#T","FS.T","T.M#"],"n":4},{"ch":4,"map":["..S.","SF..","L#..","T#.."],"inv":{"F":3,"S":1,"L":1,"M":1,"T":1},"sol":["FFSF","SFLS","L#T.","T#.M"],"n":4},{"ch":4,"map":["M..T","..T.",".#..","F..L"],"inv":{"T":4,"S":2,"L":1,"F":1},"sol":["M.TT",".TTT","S#LT","FFSL"],"n":3},{"ch":4,"map":["..T.","...#","#FS.","...#"],"inv":{"T":5,"M":1,"L":1},"sol":["TTTT","TTL#","#FS.","M..#"],"n":1},{"ch":5,"map":["....","....","#.#."],"inv":{"T":2,"F":3,"P":3,"S":2},"sol":["TFTF","FSPS","#P#P"],"n":5},{"ch":5,"map":[".#..","....","...#",".#.P"],"inv":{"T":6,"S":2,"F":4},"sol":["T#TT","FTTT","SFF#","F#SP"],"n":4},{"ch":5,"map":["....",".#L.",".#F.","#..."],"inv":{"T":2,"L":3,"S":3,"F":2,"P":1},"sol":["TLTL","L#LS","S#FF","#PSF"],"n":3},{"ch":5,"map":[".FS.","....","#S.#",".L.T"],"inv":{"F":1,"S":3,"L":3,"T":1,"P":1},"sol":["FFSL","SLLS","#SP#","SLTT"],"n":2},{"ch":5,"map":[".#S.","....","#T.#","...."],"inv":{"S":2,"T":2,"P":3,"F":1,"M":1},"sol":["S#SF","PT.T","#TP#","M.SP"],"n":3},{"ch":6,"map":["....","...#",".S~~","..~~"],"inv":{"T":6,"F":2,"S":1,"L":1},"sol":["TTTT","TFT#","FS~~","SL~~"],"n":3},{"ch":6,"map":[".S##","....",".T~~","..~~"],"inv":{"F":2,"L":1,"M":1,"T":2},"sol":["FS##","TF.M","LT~~","T.~~"],"n":6},{"ch":6,"map":["~~...","~~S..","#T...","#...#"],"inv":{"F":4,"T":1,"L":3,"S":2,"P":1},"sol":["~~FFS","~~SFF","#TLSP","#LTL#"],"n":4},{"ch":6,"map":["...#.","S.LP.","~~...","~~.#."],"inv":{"F":3,"S":2,"P":1,"T":4,"L":1},"sol":["FFS#P","SFLPS","~~TTL","~~T#T"],"n":1},{"ch":6,"map":["...~~","##.~~","...#.",".T.M."],"inv":{"F":2,"S":2,"P":2,"T":2,"L":1},"sol":["FSF~~","##P~~","TPS#T","LT.M."],"n":3}];
+const CH=[["Erste Schritte","S"],["Sonnenseite","T"],["Bienenwiese","L"],["Wilde Minze","M"],["Steingarten","P"],["Am Teich",""]];
+const ART={
+S:`<path d="M50 94V50" stroke="#4d8a3a" stroke-width="6" stroke-linecap="round"/><path d="M50 74c-14-2-20-10-22-16 10 0 18 4 22 12M50 68c12-2 18-9 20-14-9 0-16 4-20 10" fill="#5fa046"/>${[...Array(12)].map((_,i)=>`<ellipse cx="50" cy="16" rx="7" ry="14" fill="${i%2?'#f7c63e':'#efa923'}" transform="rotate(${i*30} 50 34)"/>`).join('')}<circle cx="50" cy="34" r="13" fill="#7a4a1e"/><circle cx="46" cy="30" r="3.5" fill="#a0692e"/>`,
+F:`${[-40,-20,0,20,40].map(a=>`<path d="M50 94C47 72 49 42 50 16c5 22 5 52 0 78z" fill="${a%40?'#4da352':'#3f8f46'}" transform="rotate(${a} 50 94)"/>`).join('')}<path d="M50 94V30" stroke="#2c6b33" stroke-width="3"/>`,
+T:`<path d="M50 94V52" stroke="#4d8a3a" stroke-width="6" stroke-linecap="round"/><path d="M50 92C34 86 30 68 32 60c10 6 16 18 18 32" fill="#5fa046"/><path d="M31 30c0 19 8 27 19 27s19-8 19-27l-10 8-9-15-9 15z" fill="#e2503c"/><path d="M50 23l-7 11 7 19 7-19z" fill="#f2785f"/>`,
+L:`${[-12,0,12].map(a=>`<g transform="rotate(${a} 50 94)"><path d="M50 94V32" stroke="#6b8f5a" stroke-width="4"/>${[0,1,2,3,4].map(j=>`<ellipse cx="${j%2?54:46}" cy="${24+j*9}" rx="6" ry="7" fill="${j%2?'#8a66c9':'#a888e0'}"/>`).join('')}</g>`).join('')}`,
+M:`<path d="M50 94V40" stroke="#3d7a46" stroke-width="5"/>${[[40,30,-30],[60,30,30],[36,52,-40],[64,52,40],[42,72,-50],[58,72,50],[50,22,0]].map(([x,y,a])=>`<ellipse cx="${x}" cy="${y}" rx="11" ry="8" fill="#72c98f" stroke="#3d9a5f" stroke-width="2" transform="rotate(${a} ${x} ${y})"/>`).join('')}`,
+P:`<path d="M40 92c0-16 2-30 2-40h16c0 10 2 24 2 40z" fill="#f1e4cc"/><path d="M14 56C14 30 34 16 50 16s36 14 36 40c-10 4-62 4-72 0z" fill="#a8623a"/><path d="M24 50C28 34 38 26 50 26" stroke="#c98552" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="62" cy="36" r="4" fill="#e9c9a0"/><circle cx="40" cy="42" r="3" fill="#e9c9a0"/>`,
+'#':`<ellipse cx="50" cy="66" rx="38" ry="25" fill="#8d8d86"/><ellipse cx="44" cy="57" rx="23" ry="12" fill="#b3b2aa"/><ellipse cx="64" cy="76" rx="11" ry="5" fill="#74746d"/>`,
+'~':`<rect x="0" y="0" width="100" height="100" rx="16" fill="#4f9bc4"/><path d="M16 38q8-6 16 0t16 0M50 66q8-6 16 0t16 0" stroke="#c6e8f5" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="74" cy="28" r="7" fill="#7fc48a"/>`
+};
+const NAME={S:"Sonnenblume",F:"Farn",T:"Tulpe",L:"Lavendel",M:"Minze",P:"Pilz"};
+const RULE={S:"Wirft Schatten auf ihre 4 Nachbarfelder. Braucht selbst Sonne, also keine Sonnenblume daneben.",F:"Braucht Schatten: Mindestens eine Sonnenblume steht direkt daneben.",T:"Braucht Sonne: Keine Sonnenblume direkt daneben.",L:"Lockt Bienen: Braucht mindestens 2 Blüten (Sonnenblume oder Tulpe) direkt daneben.",M:"Wuchert: Direkt daneben darf keine andere Pflanze stehen.",P:"Braucht Schatten und einen Stein direkt daneben."};
+const isP=x=>x&&'SFTLMP'.includes(x);
+const svg=(k,cls='')=>`<svg viewBox="0 0 100 100" aria-hidden="true"><g class="plant ${cls}">${ART[k]}</g></svg>`;
+const $=id=>document.getElementById(id);
+LEVELS.forEach((l,i)=>{l.ch=l.ch-1;l.no=LEVELS.slice(0,i).filter(x=>x.ch==l.ch).length+1});
+let save={done:{},sound:true};
+try{save=Object.assign(save,JSON.parse(localStorage.getItem('nachbargarten2'))||{})}catch(e){}
+const store=()=>{try{localStorage.setItem('nachbargarten2',JSON.stringify(save))}catch(e){}};
+const unlocked=i=>i==0||!!save.done[i-1]||!!save.done[i];
+let li=0,grid,fixed,R,C,left,sel,won,hist,lastPlaced=-1,hintCell=-1;
+for(let i=0;i<LEVELS.length;i++){if(!save.done[i]){li=i;break}li=i}
+
+function load(i){li=i;const L=LEVELS[i];grid=L.map.map(r=>r.split(''));fixed=L.map.map(r=>r.split('').map(isP));R=grid.length;C=grid[0].length;
+ left={...L.inv};sel=Object.keys(left).find(k=>left[k]>0);won=false;hist=[];lastPlaced=-1;hintCell=-1;render()}
+const at=(r,c)=>r>=0&&c>=0&&r<R&&c<C?grid[r][c]:null;
+const nbs=(r,c)=>[at(r-1,c),at(r+1,c),at(r,c-1),at(r,c+1)];
+function ok(r,c){const p=grid[r][c],nb=nbs(r,c),sh=nb.includes('S');
+ if(p=='S'||p=='T')return !sh;if(p=='F')return sh;if(p=='L')return nb.filter(x=>x=='S'||x=='T').length>=2;
+ if(p=='M')return !nb.some(isP);if(p=='P')return sh&&nb.includes('#');return true}
+function tone(f,d=.35){if(!save.sound)return;try{const a=tone.ctx||(tone.ctx=new(window.AudioContext||window.webkitAudioContext)());const o=a.createOscillator(),g=a.createGain();o.type='sine';o.frequency.value=f;g.gain.setValueAtTime(.1,a.currentTime);g.gain.exponentialRampToValueAtTime(.001,a.currentTime+d);o.connect(g).connect(a.destination);o.start();o.stop(a.currentTime+d)}catch(e){}}
+const plantsIn=L=>[...new Set([...Object.keys(L.inv),...L.map.join('').split('').filter(isP)])].sort((a,b)=>'SFTLMP'.indexOf(a)-'SFTLMP'.indexOf(b));
+function newPlant(i){const seen=new Set();LEVELS.slice(0,i).forEach(l=>plantsIn(l).forEach(p=>seen.add(p)));return plantsIn(LEVELS[i]).filter(p=>!seen.has(p))}
+
+function render(){
+ const L=LEVELS[li];
+ $('sub').innerHTML=`Kapitel ${L.ch+1}: <b>${CH[L.ch][0]}</b> · Beet ${L.no}`;
+ const np=newPlant(li);
+ $('intro').innerHTML=np.length&&!won?np.map(k=>`<div class="intro">${svg(k)}<div><b>Neu: ${NAME[k]}</b>${RULE[k]}</div></div>`).join(''):'';
+ const bed=$('bed');bed.style.gridTemplateColumns=`repeat(${C},minmax(0,1fr))`;
+ let html='',allOk=true;
+ for(let r=0;r<R;r++)for(let c=0;c<C;c++){const x=grid[r][c],id=r*C+c;
+  const shade=x!='#'&&x!='~'&&nbs(r,c).includes('S');let inner='',cls='cell';
+  if(x=='#'){cls+=' stone';inner=svg('#')}else if(x=='~'){cls+=' pond';inner=svg('~')}
+  else if(isP(x)){const g=ok(r,c);if(!g)allOk=false;inner=svg(x,(g?'ok':'no')+(id==lastPlaced?' new':''))+`<span class="mood ${g?'ok':'no'}"></span>`+(fixed[r][c]?'<span class="pin"></span>':'');if(fixed[r][c])cls+=' fixed'}
+  if(shade)cls+=' shade';if(id==hintCell)cls+=' hint';
+  const label=x=='.'?`Freies Feld${shade?' im Schatten':''}`:isP(x)?`${NAME[x]}${fixed[r][c]?', fest':''}, ${ok(r,c)?'zufrieden':'unzufrieden'}`:x=='#'?'Stein':'Teich';
+  html+=`<button class="${cls}" data-r="${r}" data-c="${c}" aria-label="${label}">${inner}</button>`}
+ bed.innerHTML=html;
+ $('seeds').innerHTML=Object.keys(L.inv).map(k=>`<button class="seed ${k==sel?'sel':''}" data-k="${k}" ${left[k]?'':'disabled'}>${svg(k)}<span>${left[k]}×<small>${NAME[k]}</small></span></button>`).join('');
+ const rest=Object.values(left).reduce((a,b)=>a+b,0);
+ const m=$('msg');
+ if(rest==0&&allOk){m.textContent='Alle Pflanzen sind zufrieden.';if(!won){won=true;finish()}}
+ else m.textContent=rest?`Noch ${rest} Pflanze${rest>1?'n':''} zu setzen.`:'Alles gepflanzt, aber noch nicht jede Pflanze ist zufrieden.';
+ $('undo').disabled=!hist.length||won;$('hint').disabled=won;
+ $('rules').innerHTML=plantsIn(L).map(k=>`<div class="rule">${svg(k)}<div><b>${NAME[k]}</b>: ${RULE[k]}</div></div>`).join('')+(/[#~]/.test(L.map.join(''))?`<div class="rule">${svg('#')}<div><b>Stein und Teich</b>: Hier wächst nichts, und sie werfen keinen Schatten.</div></div>`:'');
+ renderGarden()}
+
+function finish(){save.done[li]=grid.map(r=>r.join(''));store();
+ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,.5),i*130));
+ const L=LEVELS[li],last=li==LEVELS.length-1,chapEnd=last||LEVELS[li+1].ch!=L.ch;
+ $('winArt').innerHTML=svg(plantsIn(L).slice(-1)[0],'ok');
+ $('winTxt').textContent=last?'Du hast alle 30 Beete geschafft. Dein Garten ist komplett.':chapEnd?`Kapitel „${CH[L.ch][0]}“ abgeschlossen. Als Nächstes: ${CH[L.ch+1][0]}.`:'Das Beet wandert in deinen Garten.';
+ $('winNext').textContent=last?'Zum Garten':'Nächstes Beet';
+ setTimeout(()=>{$('winOv').hidden=false;$('winNext').focus();petals()},450)}
+function petals(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const cols=['#f4b731','#e2503c','#a888e0','#72c98f','#f2785f'];
+ for(let i=0;i<36;i++){const p=document.createElement('div');p.className='petal';p.style.left=Math.random()*100+'vw';p.style.background=cols[i%5];p.style.setProperty('--dx',(Math.random()*160-80)+'px');p.style.animationDuration=(2.2+Math.random()*2)+'s';p.style.animationDelay=Math.random()*.6+'s';document.body.appendChild(p);setTimeout(()=>p.remove(),5000)}}
+
+function renderGarden(){
+ const n=Object.keys(save.done).length;$('count').textContent=`${n} von ${LEVELS.length} Beeten bepflanzt`;
+ $('garden').innerHTML=LEVELS.map((L,i)=>{const rows=save.done[i];
+  if(!rows)return unlocked(i)?`<div class="mini todo">${i+1}</div>`:'';
+  return `<div class="mini" title="Beet ${i+1}"><div class="g" style="grid-template-columns:repeat(${rows[0].length},minmax(0,1fr))">${rows.join('').split('').map(x=>`<div>${x=='.'?'':svg(x,isP(x)?'':'')}</div>`).join('')}</div></div>`}).join('')}
+
+function renderMap(){$('mapList').innerHTML=CH.map((c,ci)=>{const ids=LEVELS.map((l,i)=>l.ch==ci?i:-1).filter(i=>i>=0);const d=ids.filter(i=>save.done[i]).length;
+ return `<div class="chap">${ci+1}. ${c[0]} <span>${d}/${ids.length}</span></div><div class="lvls">${ids.map(i=>`<button class="lv ${save.done[i]?'done':''} ${i==li?'cur':''}" data-l="${i}" ${unlocked(i)?'':'disabled'} aria-label="Beet ${i+1}">${LEVELS[i].no}</button>`).join('')}</div>`}).join('')}
+
+function hint(){const L=LEVELS[li];const sol=L.sol;
+ for(let r=0;r<R;r++)for(let c=0;c<C;c++){const x=grid[r][c];if(isP(x)&&!fixed[r][c]&&x!=sol[r][c]){hintCell=r*C+c;$('msg').textContent=`Tipp: ${NAME[x]} steht hier nicht gut. Nimm sie heraus.`;renderKeep();return}}
+ for(let r=0;r<R;r++)for(let c=0;c<C;c++){const s=sol[r][c];if(grid[r][c]=='.'&&isP(s)&&left[s]>0){hintCell=r*C+c;sel=s;renderKeep(`Tipp: Hier passt ein${s=='T'||s=='S'||s=='M'?'e':''} ${NAME[s]}.`);return}}}
+function renderKeep(t){const m=t;render();if(m)$('msg').textContent=m}
+
+$('bed').addEventListener('click',e=>{const b=e.target.closest('.cell');if(!b||won)return;const r=+b.dataset.r,c=+b.dataset.c,x=grid[r][c];if(fixed[r][c])return;hintCell=-1;
+ if(isP(x)){hist.push([r,c,x,'.']);grid[r][c]='.';left[x]++;sel=x;lastPlaced=-1;tone(330,.2)}
+ else if(x=='.'&&sel&&left[sel]>0){hist.push([r,c,'.',sel]);grid[r][c]=sel;left[sel]--;lastPlaced=r*C+c;tone(392+('SFTLMP'.indexOf(sel))*60,.3);if(!left[sel]){const n=Object.keys(left).find(k=>left[k]>0);if(n)sel=n}}
+ render()});
+$('seeds').addEventListener('click',e=>{const b=e.target.closest('.seed');if(!b||b.disabled)return;sel=b.dataset.k;tone(600,.08);render()});
+$('undo').addEventListener('click',()=>{const h=hist.pop();if(!h)return;const [r,c,was,now]=h;grid[r][c]=was;if(isP(now))left[now]++;if(isP(was))left[was]--;lastPlaced=-1;hintCell=-1;render()});
+$('hint').addEventListener('click',hint);
+$('reset').addEventListener('click',()=>load(li));
+$('map').addEventListener('click',()=>{renderMap();$('mapOv').hidden=false});
+$('mapClose').addEventListener('click',()=>$('mapOv').hidden=true);
+$('mapList').addEventListener('click',e=>{const b=e.target.closest('.lv');if(!b||b.disabled)return;$('mapOv').hidden=true;load(+b.dataset.l)});
+$('winNext').addEventListener('click',()=>{$('winOv').hidden=true;if(li<LEVELS.length-1)load(li+1);else $('garden').scrollIntoView({behavior:'smooth'})});
+for(const o of ['mapOv','winOv'])$(o).addEventListener('click',e=>{if(e.target.id==o&&o=='mapOv')$(o).hidden=true});
+const sb=()=>{$('snd').style.opacity=save.sound?1:.45};
+$('snd').addEventListener('click',()=>{save.sound=!save.sound;store();sb();tone(660,.12)});sb();
+load(li);
+if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
